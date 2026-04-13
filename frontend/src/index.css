@@ -1,0 +1,17 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap');
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'DM Sans', -apple-system, sans-serif;
+  background: linear-gradient(160deg, #e8dff5 0%, #d4e7ed 35%, #e6f0e8 65%, #fce8d5 100%);
+  background-attachment: fixed;
+  color: #2b2d42;
+  min-height: 100vh;
+}
+
+h1, h2, h3 { font-weight: 700; }
+
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #c4b5d6; border-radius: 3px; }
