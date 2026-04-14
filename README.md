@@ -5,6 +5,14 @@
 
 ---
 
+## Demo
+
+https://github.com/user-attachments/assets/a2a31700-ddaf-4d5a-9fed-6388e9523763
+
+> Upload an image or video, select a model/backend, and see real-time bounding boxes with latency. Compare all 6 configurations side-by-side.
+
+---
+
 ## Overview
 
 A full-stack object detection application that compares inference performance across two models and three runtime backends on a Tesla T4 GPU.
