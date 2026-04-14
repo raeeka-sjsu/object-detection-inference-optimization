@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import "./App.css";
 import heic2any from "heic2any";
 import ModelSelector from "./components/ModelSelector";
@@ -35,6 +35,13 @@ function App() {
   };
 
   const HEADERS = { "ngrok-skip-browser-warning": "true" };
+  const abortRef = useRef(null);
+
+  const cancelPending = () => {
+    if (abortRef.current) { abortRef.current.abort(); abortRef.current = null; }
+    setLoading(false);
+    setComparing(false);
+  };
 
   const connect = useCallback(async () => {
     try {
@@ -52,6 +59,7 @@ function App() {
   }, [urlInput]);
 
   const handleFileSelect = useCallback(async (f) => {
+    cancelPending();
     setConverting(true);
     let processed = f;
     const name = f.name.toLowerCase();
@@ -75,6 +83,9 @@ function App() {
 
   const runDetection = useCallback(async () => {
     if (!file || !selectedModel) return;
+    cancelPending();
+    const controller = new AbortController();
+    abortRef.current = controller;
     setLoading(true);
     setCompareResults(null);
     setVideoResults(null);
@@ -84,7 +95,7 @@ function App() {
       if (isVideo) {
         const res = await fetch(
           `${backendUrl}/detect-video?model=${selectedModel}&confidence=${confidence}&max_frames=2000`,
-          { method: "POST", body: formData, headers: HEADERS }
+          { method: "POST", body: formData, headers: HEADERS, signal: controller.signal }
         );
         const data = await res.json();
         setVideoResults(data);
@@ -93,7 +104,7 @@ function App() {
       } else {
         const res = await fetch(
           `${backendUrl}/detect?model=${selectedModel}&confidence=${confidence}`,
-          { method: "POST", body: formData, headers: HEADERS }
+          { method: "POST", body: formData, headers: HEADERS, signal: controller.signal }
         );
         const data = await res.json();
         setDetections(data.detections || []);
@@ -101,6 +112,7 @@ function App() {
         setImageSize(data.image_size || null);
       }
     } catch (err) {
+      if (err.name === "AbortError") return;
       console.error("Detection failed:", err);
     } finally {
       setLoading(false);
@@ -109,6 +121,9 @@ function App() {
 
   const runCompareAll = useCallback(async () => {
     if (!file) return;
+    cancelPending();
+    const controller = new AbortController();
+    abortRef.current = controller;
     setComparing(true);
     setDetections([]);
     setLatency(null);
@@ -123,7 +138,7 @@ function App() {
         if (isVideo) {
           const res = await fetch(
             `${backendUrl}/detect-video?model=${m.key}&confidence=${confidence}&max_frames=2000`,
-            { method: "POST", body: formData, headers: HEADERS }
+            { method: "POST", body: formData, headers: HEADERS, signal: controller.signal }
           );
           const data = await res.json();
           results.push({ key: m.key, detections: data.frames?.[0]?.detections || [],
@@ -131,13 +146,14 @@ function App() {
         } else {
           const res = await fetch(
             `${backendUrl}/detect?model=${m.key}&confidence=${confidence}`,
-            { method: "POST", body: formData, headers: HEADERS }
+            { method: "POST", body: formData, headers: HEADERS, signal: controller.signal }
           );
           const data = await res.json();
           results.push({ key: m.key, detections: data.detections || [],
             latency_ms: data.latency_ms || 0, image_size: data.image_size || null });
         }
       } catch (err) {
+        if (err.name === "AbortError") return;
         results.push({ key: m.key, detections: [], latency_ms: 0, image_size: null });
       }
     }
@@ -269,10 +285,10 @@ ul{margin:8px 0;padding-left:20px}li{margin:6px 0;line-height:1.5}
             <>
               <div className="main-content">
                 <div className={`card ${!imageSrc ? 'drop-zone' : ''}`}
-                  onClick={() => { const i = document.createElement('input'); i.type='file'; i.accept='image/*,.heic,.heif,video/*'; i.onchange=(e)=>{ if(e.target.files[0]) handleFileSelect(e.target.files[0]); }; i.click(); }}
+                  onClick={() => { if (!imageSrc) { const i = document.createElement('input'); i.type='file'; i.accept='image/*,.heic,.heif,video/*'; i.onchange=(e)=>{ if(e.target.files[0]) handleFileSelect(e.target.files[0]); }; i.click(); }}}
                   {...dropProps}
                   style={{
-                    ...(imageSrc ? { cursor: "pointer" } : {}),
+                    ...(!imageSrc ? { cursor: "pointer" } : {}),
                     ...(dragOver ? { outline: "3px dashed #5db8a3", outlineOffset: "8px", transition: "outline 0.2s" } : {}),
                   }}>
                   {!imageSrc ? (
@@ -311,9 +327,7 @@ ul{margin:8px 0;padding-left:20px}li{margin:6px 0;line-height:1.5}
           {isVideo && !compareResults && (
             <>
               <div {...dropProps}
-                onClick={() => { const i = document.createElement('input'); i.type='file'; i.accept='image/*,.heic,.heif,video/*'; i.onchange=(e)=>{ if(e.target.files[0]) handleFileSelect(e.target.files[0]); }; i.click(); }}
                 style={{
-                  cursor: "pointer",
                   borderRadius: 16,
                   position: "relative",
                   ...(dragOver ? { outline: "3px dashed #5db8a3", outlineOffset: "8px" } : {}),
@@ -375,8 +389,7 @@ ul{margin:8px 0;padding-left:20px}li{margin:6px 0;line-height:1.5}
           {/* Compare all view */}
           {compareResults && (
             <div {...dropProps}
-              onClick={() => { const i = document.createElement('input'); i.type='file'; i.accept='image/*,.heic,.heif,video/*'; i.onchange=(e)=>{ if(e.target.files[0]) handleFileSelect(e.target.files[0]); }; i.click(); }}
-              style={{ cursor: "pointer", borderRadius: 16, ...(dragOver ? { outline: "3px dashed #5db8a3", outlineOffset: "8px" } : {}) }}>
+              style={{ borderRadius: 16, ...(dragOver ? { outline: "3px dashed #5db8a3", outlineOffset: "8px" } : {}) }}>
               {!isVideo && (
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14, marginBottom: 20 }}>
                   {compareResults.map((r) => (
