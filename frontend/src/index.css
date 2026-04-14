@@ -2,12 +2,46 @@
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
+:root {
+  --bg-light: linear-gradient(160deg, #e8dff5 0%, #d4e7ed 35%, #e6f0e8 65%, #fce8d5 100%);
+  --bg-dark: linear-gradient(160deg, #1a1628 0%, #1c2333 35%, #1a2420 65%, #231e1a 100%);
+  --text: #2b2d42;
+  --card: rgba(255,255,255,0.8);
+  --card-border: rgba(155,142,196,0.15);
+  --input-bg: rgba(255,255,255,0.5);
+  --input-border: rgba(155,142,196,0.25);
+  --muted: #7f8296;
+  --hover: rgba(93,184,163,0.04);
+  --tbl-border: rgba(155,142,196,0.08);
+  --tbl-head: rgba(155,142,196,0.15);
+  --drop-bg: rgba(93,184,163,0.03);
+  --drop-border: rgba(93,184,163,0.4);
+  --backdrop: blur(12px);
+}
+
 body {
   font-family: 'DM Sans', -apple-system, sans-serif;
-  background: linear-gradient(160deg, #e8dff5 0%, #d4e7ed 35%, #e6f0e8 65%, #fce8d5 100%);
+  background: var(--bg-light);
   background-attachment: fixed;
-  color: #2b2d42;
+  color: var(--text);
   min-height: 100vh;
+  transition: background 0.4s, color 0.4s;
+}
+
+body.dark {
+  --text: #d0cce0;
+  --card: rgba(26,22,40,0.82);
+  --card-border: rgba(155,142,196,0.22);
+  --input-bg: rgba(26,22,40,0.6);
+  --input-border: rgba(155,142,196,0.3);
+  --muted: #8a87a0;
+  --hover: rgba(93,184,163,0.08);
+  --tbl-border: rgba(155,142,196,0.12);
+  --tbl-head: rgba(155,142,196,0.22);
+  --drop-bg: rgba(93,184,163,0.06);
+  --drop-border: rgba(93,184,163,0.5);
+  background: var(--bg-dark);
+  color: var(--text);
 }
 
 h1, h2, h3 { font-weight: 700; }

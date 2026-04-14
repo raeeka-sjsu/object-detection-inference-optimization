@@ -27,6 +27,12 @@ function App() {
   const [videoResults, setVideoResults] = useState(null);
   const [converting, setConverting] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+  const [dark, setDark] = useState(false);
+
+  const toggleTheme = () => {
+    setDark(!dark);
+    document.body.classList.toggle("dark");
+  };
 
   const dropProps = {
     onDragOver: (e) => { e.preventDefault(); setDragOver(true); },
@@ -247,6 +253,9 @@ ul{margin:8px 0;padding-left:20px}li{margin:6px 0;line-height:1.5}
 
   return (
     <div className="app">
+      <button className="theme-toggle" onClick={toggleTheme} title={dark ? "Light mode" : "Dark mode"}>
+        {dark ? "☀️" : "🌙"}
+      </button>
       <div className="app-header">
         <h1>Object Detection</h1>
         <p>YOLOv8 & RT-DETR · ONNX Runtime & TensorRT Acceleration</p>
