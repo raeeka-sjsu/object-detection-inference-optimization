@@ -133,7 +133,6 @@ Model files are saved to Google Drive so no re-exporting is needed. **Note:** Te
 - **Compare All** — Runs all 6 model/backend combos on the same image, shows side-by-side results with comparison table
 - **Video Detection** — Upload video → processes frames → plays video with live bounding box overlay
 - **Generate Report** — PDF-ready reports for individual detections, video results, and full comparisons
-- **Drag & Drop** — Drop images/videos anywhere on the page
 - **HEIC Support** — iPhone photos (HEIC) are automatically converted to JPG
 - **Confidence Slider** — Adjust detection threshold in real-time
 
