@@ -25,6 +25,7 @@ function App() {
   const [compareResults, setCompareResults] = useState(null);
   const [comparing, setComparing] = useState(false);
   const [videoResults, setVideoResults] = useState(null);
+  const [converting, setConverting] = useState(false);
   const [dragOver, setDragOver] = useState(false);
 
   const dropProps = {
@@ -51,7 +52,7 @@ function App() {
   }, [urlInput]);
 
   const handleFileSelect = useCallback(async (f) => {
-    // Convert HEIC to JPG
+    setConverting(true);
     let processed = f;
     const name = f.name.toLowerCase();
     if (name.endsWith(".heic") || name.endsWith(".heif")) {
@@ -69,6 +70,7 @@ function App() {
     const video = processed.type.startsWith("video/") || processed.name.match(/\.(mp4|mov|avi|mkv)$/i);
     setIsVideo(!!video);
     setImageSrc(video ? null : URL.createObjectURL(processed));
+    setConverting(false);
   }, []);
 
   const runDetection = useCallback(async () => {
@@ -280,7 +282,15 @@ ul{margin:8px 0;padding-left:20px}li{margin:6px 0;line-height:1.5}
                       <div style={{ color: "#b5b0c0", fontSize: "0.8rem" }}>Supports JPG, PNG, HEIC, MP4, MOV</div>
                     </>
                   ) : (
-                    <DetectionCanvas imageSrc={imageSrc} detections={detections} imageSize={imageSize} />
+                    <div style={{ position: "relative" }}>
+                      <DetectionCanvas imageSrc={imageSrc} detections={detections} imageSize={imageSize} />
+                      {(loading || comparing || converting) && (
+                        <div style={{ position: "absolute", inset: 0, background: "rgba(255,255,255,0.6)", backdropFilter: "blur(3px)", borderRadius: 8, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10 }}>
+                          <div className="spinner" />
+                          <div className="loading-text">{converting ? "Converting..." : comparing ? "Comparing models..." : "Detecting..."}</div>
+                        </div>
+                      )}
+                    </div>
                   )}
                 </div>
                 <div>
@@ -305,9 +315,16 @@ ul{margin:8px 0;padding-left:20px}li{margin:6px 0;line-height:1.5}
                 style={{
                   cursor: "pointer",
                   borderRadius: 16,
-                  ...(dragOver ? { outline: "3px dashed #5db8a3", outlineOffset: "8px", transition: "outline 0.2s" } : {}),
+                  position: "relative",
+                  ...(dragOver ? { outline: "3px dashed #5db8a3", outlineOffset: "8px" } : {}),
                 }}>
                 <VideoPlayer videoFile={file} videoResults={videoResults} />
+                {(loading || comparing || converting) && (
+                  <div style={{ position: "absolute", inset: 0, background: "rgba(255,255,255,0.6)", backdropFilter: "blur(3px)", borderRadius: 14, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10, zIndex: 10 }}>
+                    <div className="spinner" />
+                    <div className="loading-text">{converting ? "Converting..." : comparing ? "Comparing models..." : "Processing video..."}</div>
+                  </div>
+                )}
               </div>
               {videoResults && (
                 <div className="card" style={{ marginTop: 16 }}>
@@ -357,7 +374,9 @@ ul{margin:8px 0;padding-left:20px}li{margin:6px 0;line-height:1.5}
 
           {/* Compare all view */}
           {compareResults && (
-            <>
+            <div {...dropProps}
+              onClick={() => { const i = document.createElement('input'); i.type='file'; i.accept='image/*,.heic,.heif,video/*'; i.onchange=(e)=>{ if(e.target.files[0]) handleFileSelect(e.target.files[0]); }; i.click(); }}
+              style={{ cursor: "pointer", borderRadius: 16, ...(dragOver ? { outline: "3px dashed #5db8a3", outlineOffset: "8px" } : {}) }}>
               {!isVideo && (
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14, marginBottom: 20 }}>
                   {compareResults.map((r) => (
@@ -421,7 +440,7 @@ ul{margin:8px 0;padding-left:20px}li{margin:6px 0;line-height:1.5}
                   </tbody>
                 </table>
               </div>
-            </>
+            </div>
           )}
         </>
       )}
